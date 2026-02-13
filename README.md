@@ -110,36 +110,26 @@ Row Level Security (RLS) is enabled so that:
 
 ---
 
-## 🐛 Problems I Ran Into (and How I Solved Them)
+## Problems I Ran Into (and How I Solved Them)
 
-### 1) Realtime worked for INSERT but not DELETE
+### 1) Delete wasn’t syncing in real-time
+Adding a bookmark was updating in the other tab instantly, but deleting wasn’t.
 
-Initially, bookmarks were appearing in real-time when added, but deletions were not syncing across tabs.
+**What I did:**
+- Enabled realtime for the `bookmarks` table in Supabase
+- Made sure DELETE events were enabled
+- Updated the realtime subscription to handle both INSERT and DELETE properly
 
-**Fix:**
-* Enabled realtime on the `bookmarks` table in Supabase
-* Ensured `DELETE` events were broadcast
-* Updated the client subscription to explicitly listen to `INSERT` and `DELETE` events and update state accordingly
+### 2) Bookmark stayed on screen after delete
+Even though the row was deleted in Supabase, it still showed in the UI until refresh.
 
-### 2) UI didn't update instantly after deleting
-
-At first, the deleted bookmark stayed in the UI until refresh.
-
-**Fix:**
-* Updated the UI state immediately when deleting (optimistic UI)
-* Kept realtime enabled so other tabs stay in sync
+**What I did:**
+- Removed it from the local state immediately after clicking delete
+- Realtime still handles syncing for other tabs
 
 ---
 
 ## 🚀 Deployment
 
-Deployed on Vercel.
-
-To make Google login work in production:
-
-* Added the Vercel domain in Supabase Auth URL configuration
-* Added production redirect URL:
-  ```
-  https://your-domain.vercel.app/auth/callback
-  ```
-* Added the Vercel domain in Google Cloud OAuth credentials under **Authorized JavaScript Origins**
+Deployed on Vercel.  
+Google OAuth redirect URL was added in Supabase so login works in production.
