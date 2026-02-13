@@ -18,8 +18,9 @@ export default function HomePage() {
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-md rounded-xl border p-6 shadow-sm">
         <h1 className="text-2xl font-semibold">Smart Bookmark App</h1>
+
         <p className="mt-2 text-sm text-gray-600">
-          Login with Google to manage your private bookmarks.
+          Login with Google to save and manage your bookmarks.
         </p>
 
         <button

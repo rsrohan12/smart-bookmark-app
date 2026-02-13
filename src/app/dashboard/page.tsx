@@ -2,24 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-
-type Bookmark = {
-  id: string;
-  title: string;
-  url: string;
-  user_id: string;
-  created_at: string;
-};
+import { Bookmark } from "@/types/bookmark";
+import BookmarkForm from "@/components/BookmarkForm";
+import BookmarkCard from "@/components/BookmarkCard";
 
 export default function DashboardPage() {
   const supabase = createClient();
 
   const [userId, setUserId] = useState<string | null>(null);
+  const [email, setEmail] = useState<string>("");
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-  const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Load user + initial bookmarks
+  const fetchBookmarks = async (uid: string) => {
+    const { data, error } = await supabase
+      .from("bookmarks")
+      .select("*")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
+
+    if (!error) setBookmarks(data || []);
+  };
+
   useEffect(() => {
     const init = async () => {
       const { data } = await supabase.auth.getUser();
@@ -30,20 +34,16 @@ export default function DashboardPage() {
       }
 
       setUserId(data.user.id);
+      setEmail(data.user.email || "");
 
-      const { data: bookmarkData } = await supabase
-        .from("bookmarks")
-        .select("*")
-        .eq("user_id", data.user.id)
-        .order("created_at", { ascending: false });
-
-      setBookmarks(bookmarkData || []);
+      await fetchBookmarks(data.user.id);
+      setLoading(false);
     };
 
     init();
   }, []);
 
-  // Realtime subscription
+  // Realtime sync
   useEffect(() => {
     if (!userId) return;
 
@@ -58,14 +58,7 @@ export default function DashboardPage() {
           filter: `user_id=eq.${userId}`,
         },
         async () => {
-          // easiest human approach: refetch list
-          const { data } = await supabase
-            .from("bookmarks")
-            .select("*")
-            .eq("user_id", userId)
-            .order("created_at", { ascending: false });
-
-          setBookmarks(data || []);
+          await fetchBookmarks(userId);
         }
       )
       .subscribe();
@@ -75,35 +68,34 @@ export default function DashboardPage() {
     };
   }, [userId]);
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/";
-  };
-
-  const addBookmark = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!title.trim() || !url.trim() || !userId) return;
+  const addBookmark = async (title: string, url: string) => {
+    if (!userId) return;
 
     await supabase.from("bookmarks").insert({
       title,
       url,
       user_id: userId,
     });
-
-    setTitle("");
-    setUrl("");
   };
 
   const deleteBookmark = async (id: string) => {
     await supabase.from("bookmarks").delete().eq("id", id);
   };
 
+  const logout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
   return (
     <main className="min-h-screen p-6 flex justify-center">
       <div className="w-full max-w-2xl">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Your Bookmarks</h1>
+          <div>
+            <h1 className="text-2xl font-semibold">Your Bookmarks</h1>
+            <p className="text-sm text-gray-600">{email}</p>
+          </div>
+
           <button
             onClick={logout}
             className="rounded-lg border px-3 py-1 text-sm"
@@ -112,56 +104,24 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        <form
-          onSubmit={addBookmark}
-          className="mt-6 rounded-xl border p-4 space-y-3"
-        >
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title"
-            className="w-full rounded-lg border px-3 py-2"
-          />
-          <input
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="URL (https://...)"
-            className="w-full rounded-lg border px-3 py-2"
-          />
-          <button className="w-full rounded-lg bg-black text-white py-2">
-            Add Bookmark
-          </button>
-        </form>
+        <div className="mt-6">
+          <BookmarkForm onAdd={addBookmark} />
+        </div>
 
         <div className="mt-6 space-y-3">
-          {bookmarks.length === 0 ? (
+          {loading ? (
+            <p className="text-sm text-gray-600">Loading...</p>
+          ) : bookmarks.length === 0 ? (
             <p className="text-sm text-gray-600">
               No bookmarks yet. Add your first one.
             </p>
           ) : (
             bookmarks.map((b) => (
-              <div
+              <BookmarkCard
                 key={b.id}
-                className="flex items-start justify-between gap-4 rounded-xl border p-4"
-              >
-                <div>
-                  <p className="font-medium">{b.title}</p>
-                  <a
-                    href={b.url}
-                    target="_blank"
-                    className="text-sm text-blue-600 underline break-all"
-                  >
-                    {b.url}
-                  </a>
-                </div>
-
-                <button
-                  onClick={() => deleteBookmark(b.id)}
-                  className="text-sm text-red-600"
-                >
-                  Delete
-                </button>
-              </div>
+                bookmark={b}
+                onDelete={deleteBookmark}
+              />
             ))
           )}
         </div>
