@@ -3,7 +3,7 @@
 A simple bookmark manager where users can log in with Google, save private bookmarks, and see updates in real-time across tabs.
 
 **Live Demo**
-(Add your deployed Vercel URL here)
+https://smart-bookmark-app-tau-blue.vercel.app/
 
 ---
 
