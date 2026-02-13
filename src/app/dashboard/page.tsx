@@ -59,7 +59,7 @@ export default function DashboardPage() {
         },
         async () => {
           await fetchBookmarks(userId);
-        }
+        },
       )
       .subscribe();
 
@@ -79,7 +79,14 @@ export default function DashboardPage() {
   };
 
   const deleteBookmark = async (id: string) => {
-    await supabase.from("bookmarks").delete().eq("id", id);
+    setBookmarks((prev) => prev.filter((b) => b.id !== id));
+
+    const { error } = await supabase.from("bookmarks").delete().eq("id", id);
+
+    // if delete fails, refetch to restore correct state
+    if (error && userId) {
+      await fetchBookmarks(userId);
+    }
   };
 
   const logout = async () => {
@@ -117,11 +124,7 @@ export default function DashboardPage() {
             </p>
           ) : (
             bookmarks.map((b) => (
-              <BookmarkCard
-                key={b.id}
-                bookmark={b}
-                onDelete={deleteBookmark}
-              />
+              <BookmarkCard key={b.id} bookmark={b} onDelete={deleteBookmark} />
             ))
           )}
         </div>
