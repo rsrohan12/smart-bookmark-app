@@ -25,7 +25,7 @@ export default function HomePage() {
 
         <button
           onClick={loginWithGoogle}
-          className="mt-6 w-full rounded-lg bg-black text-white py-2"
+          className="mt-6 cursor-pointer w-full rounded-lg bg-black text-white py-2"
         >
           Continue with Google
         </button>

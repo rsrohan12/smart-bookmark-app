@@ -28,7 +28,7 @@ export default function BookmarkCard({ bookmark, onDelete }: Props) {
 
       <button
         onClick={() => onDelete(bookmark.id)}
-        className="text-sm text-red-600"
+        className="text-sm cursor-pointer text-red-600"
       >
         Delete
       </button>

@@ -105,7 +105,7 @@ export default function DashboardPage() {
 
           <button
             onClick={logout}
-            className="rounded-lg border px-3 py-1 text-sm"
+            className="rounded-lg cursor-pointer border px-3 py-1 text-sm"
           >
             Logout
           </button>

@@ -44,7 +44,7 @@ export default function BookmarkForm({ onAdd }: Props) {
 
       <button
         disabled={loading}
-        className="w-full rounded-lg bg-black text-white py-2 disabled:opacity-60"
+        className="w-full cursor-pointer rounded-lg bg-black text-white py-2 disabled:opacity-60"
       >
         {loading ? "Adding..." : "Add Bookmark"}
       </button>
